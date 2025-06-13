@@ -24,12 +24,18 @@ public class ScheduleController {
     @PostMapping("/add")
     public ResponseEntity<?> addItem(@RequestHeader("Authorization") String authHeader, @RequestBody ScheduleItem item) {
         try {
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Authorization header");
+            }
+
             String token = authHeader.substring(7);
             String email = jwtService.extractEmail(token);
             item.setOwnerEmail(email);
+
             ScheduleItem saved = scheduleRepo.save(item);
             return ResponseEntity.ok(saved);
         } catch (Exception e) {
+            e.printStackTrace(); // 🔥 Log the exact error
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error adding item.");
         }
     }
@@ -38,11 +44,16 @@ public class ScheduleController {
     @GetMapping
     public ResponseEntity<?> getAll(@RequestHeader("Authorization") String authHeader) {
         try {
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Authorization header");
+            }
+
             String token = authHeader.substring(7);
             String email = jwtService.extractEmail(token);
             List<ScheduleItem> items = scheduleRepo.findByOwnerEmail(email);
             return ResponseEntity.ok(items);
         } catch (Exception e) {
+            e.printStackTrace(); // 🔥 Log the exact error
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error fetching items.");
         }
     }
@@ -53,6 +64,10 @@ public class ScheduleController {
                                         @PathVariable Long id,
                                         @RequestBody ScheduleItem updatedItem) {
         try {
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Authorization header");
+            }
+
             String token = authHeader.substring(7);
             String email = jwtService.extractEmail(token);
 
@@ -70,6 +85,7 @@ public class ScheduleController {
             ScheduleItem saved = scheduleRepo.save(existing);
             return ResponseEntity.ok(saved);
         } catch (Exception e) {
+            e.printStackTrace(); // 🔥 Log the exact error
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error updating item.");
         }
     }
@@ -79,6 +95,10 @@ public class ScheduleController {
     public ResponseEntity<?> deleteItem(@RequestHeader("Authorization") String authHeader,
                                         @PathVariable Long id) {
         try {
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Authorization header");
+            }
+
             String token = authHeader.substring(7);
             String email = jwtService.extractEmail(token);
 
@@ -90,6 +110,7 @@ public class ScheduleController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Item not found or unauthorized.");
             }
         } catch (Exception e) {
+            e.printStackTrace(); // 🔥 Log the exact error
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error deleting item.");
         }
     }
