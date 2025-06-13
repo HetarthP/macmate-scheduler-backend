@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 @CrossOrigin(origins = "https://macmate-scheduler-frontend.vercel.app")
 @RestController
@@ -39,37 +38,33 @@ public class AuthController {
         }
     }
 
-   @PostMapping("/login")
-public Map<String, String> login(@RequestBody LoginRequest request) {
-    Map<String, String> response = new HashMap<>();
-    try {
-        // ⚠️ This will now return all users with the same email
-        List<User> userList = userRepository.findAllByEmail(request.getEmail());
+    @PostMapping("/login")
+    public Map<String, String> login(@RequestBody LoginRequest request) {
+        Map<String, String> response = new HashMap<>();
+        try {
+            List<User> userList = userRepository.findAllByEmail(request.getEmail());
 
-        if (userList.isEmpty()) {
-            response.put("message", "User not found");
-            return response;
+            if (userList.isEmpty()) {
+                response.put("message", "User not found");
+                return response;
+            }
+
+            User user = userList.get(0);
+
+            if (passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+                String token = jwtService.generateToken(user.getEmail());
+                response.put("token", token);
+            } else {
+                response.put("message", "Invalid password");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.put("message", "Login failed");
         }
 
-        // ✅ Just take the first match (you can improve this later)
-        User user = userList.get(0);
-
-        if (passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            String token = jwtService.generateToken(user.getEmail());
-            response.put("token", token); // Return token
-        } else {
-            response.put("message", "Invalid password");
-        }
-
-    } catch (Exception e) {
-        e.printStackTrace();
-        response.put("message", "Login failed");
+        return response;
     }
-
-    return response;
-}
-
-
 
     @GetMapping("/protected")
     public ResponseEntity<Map<String, String>> protectedEndpoint(@RequestHeader("Authorization") String authHeader) {
@@ -80,7 +75,7 @@ public Map<String, String> login(@RequestBody LoginRequest request) {
             return ResponseEntity.status(401).body(response);
         }
 
-        String token = authHeader.substring(7); // remove "Bearer "
+        String token = authHeader.substring(7);
 
         try {
             String email = jwtService.extractEmail(token);
@@ -91,5 +86,11 @@ public Map<String, String> login(@RequestBody LoginRequest request) {
             response.put("message", "Invalid or expired token");
             return ResponseEntity.status(401).body(response);
         }
+    }
+
+    // ✅ UptimeRobot ping route
+    @GetMapping("/")
+    public String ping() {
+        return "Backend is live!";
     }
 }
