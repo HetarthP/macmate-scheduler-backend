@@ -27,11 +27,16 @@ private static final long EXPIRATION_TIME = 1000L * 60 * 60 * 24 * 365; //  1 ye
     }
 
     public String extractEmail(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(SECRET_KEY)
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
+    // Remove wrapping quotes if present
+    if (token.startsWith("\"") && token.endsWith("\"")) {
+        token = token.substring(1, token.length() - 1);
     }
+
+    return Jwts.parserBuilder()
+            .setSigningKey(SECRET_KEY)
+            .build()
+            .parseClaimsJws(token)
+            .getBody()
+            .getSubject();
 }
+
