@@ -38,29 +38,34 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-        try {
-            Optional<User> userOpt = userRepository.findByEmail(request.getEmail());
+   @PostMapping("/login")
+public Map<String, String> login(@RequestBody LoginRequest request) {
+    Map<String, String> response = new HashMap<>();
+    try {
+        Optional<User> userOpt = userRepository.findByEmail(request.getEmail());
 
-            if (userOpt.isEmpty()) {
-                return ResponseEntity.status(404).body("User not found");
-            }
-
-            User user = userOpt.get();
-
-            if (passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-                String token = jwtService.generateToken(user.getEmail());
-                return ResponseEntity.ok(token);
-            } else {
-                return ResponseEntity.status(401).body("Invalid password");
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body("Login failed");
+        if (userOpt.isEmpty()) {
+            response.put("message", "User not found");
+            return response;
         }
+
+        User user = userOpt.get();
+
+        if (passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            String token = jwtService.generateToken(user.getEmail());
+            response.put("token", token); // ✅ return in JSON format
+        } else {
+            response.put("message", "Invalid password");
+        }
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        response.put("message", "Login failed");
     }
+
+    return response;
+}
+
 
     @GetMapping("/protected")
     public ResponseEntity<Map<String, String>> protectedEndpoint(@RequestHeader("Authorization") String authHeader) {
