@@ -1,5 +1,5 @@
 package com.mcmaster.scheduler;
-//import necessary files and frameworks
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -19,10 +19,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .cors(Customizer.withDefaults()) //  Enable CORS
-            .csrf(csrf -> csrf.disable())
+            .cors(Customizer.withDefaults()) // Enable CORS
+            .csrf(csrf -> csrf.disable())    // Disable CSRF for API
             .authorizeHttpRequests(auth -> auth
-                .anyRequest().permitAll()
+                .anyRequest().permitAll()    // Allow all requests (adjust later if needed)
             )
             .httpBasic(Customizer.withDefaults());
         return http.build();
@@ -33,12 +33,11 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    // this is basically the CORS filter allowing frontend calls from localhost:3000 
     @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.setAllowedOrigins(List.of("http://localhost:3000")); // Frontend origin
+        config.setAllowedOriginPatterns(List.of("https://macmate-scheduler-frontend.vercel.app"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
 
