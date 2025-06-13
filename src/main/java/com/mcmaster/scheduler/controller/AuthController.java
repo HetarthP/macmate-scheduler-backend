@@ -42,18 +42,20 @@ public class AuthController {
 public Map<String, String> login(@RequestBody LoginRequest request) {
     Map<String, String> response = new HashMap<>();
     try {
-        Optional<User> userOpt = userRepository.findByEmail(request.getEmail());
+        // ⚠️ This will now return all users with the same email
+        List<User> userList = userRepository.findAllByEmail(request.getEmail());
 
-        if (userOpt.isEmpty()) {
+        if (userList.isEmpty()) {
             response.put("message", "User not found");
             return response;
         }
 
-        User user = userOpt.get();
+        // ✅ Just take the first match (you can improve this later)
+        User user = userList.get(0);
 
         if (passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             String token = jwtService.generateToken(user.getEmail());
-            response.put("token", token); // ✅ return in JSON format
+            response.put("token", token); // Return token
         } else {
             response.put("message", "Invalid password");
         }
@@ -65,6 +67,7 @@ public Map<String, String> login(@RequestBody LoginRequest request) {
 
     return response;
 }
+
 
 
     @GetMapping("/protected")
