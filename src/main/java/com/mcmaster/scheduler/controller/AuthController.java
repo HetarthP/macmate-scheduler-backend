@@ -1,5 +1,6 @@
 package com.mcmaster.scheduler.controller;
 
+import java.util.List;
 import com.mcmaster.scheduler.model.User;
 import com.mcmaster.scheduler.repository.UserRepository;
 import com.mcmaster.scheduler.dto.LoginRequest;
