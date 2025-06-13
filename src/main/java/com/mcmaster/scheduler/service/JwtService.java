@@ -40,3 +40,4 @@ private static final long EXPIRATION_TIME = 1000L * 60 * 60 * 24 * 365; //  1 ye
             .getSubject();
 }
 
+}
