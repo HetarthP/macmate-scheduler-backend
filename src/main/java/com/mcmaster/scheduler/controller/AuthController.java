@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 
-@CrossOrigin(origins = "https://macmate-scheduler-frontend.vercel.app")
+@CrossOrigin(origins = "https://macmate.vercel.app")
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
