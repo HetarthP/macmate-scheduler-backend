@@ -10,9 +10,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
+@CrossOrigin(origins = "https://macmate-scheduler-frontend.vercel.app")
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
+
 
     @Autowired
     private UserRepository userRepository;
