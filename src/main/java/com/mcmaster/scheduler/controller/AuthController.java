@@ -1,22 +1,22 @@
 package com.mcmaster.scheduler.controller;
-//import statements
+
 import com.mcmaster.scheduler.model.User;
 import com.mcmaster.scheduler.repository.UserRepository;
 import com.mcmaster.scheduler.dto.LoginRequest;
 import com.mcmaster.scheduler.service.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.CrossOrigin;
 
-
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @CrossOrigin(origins = "https://macmate-scheduler-frontend.vercel.app")
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
-
 
     @Autowired
     private UserRepository userRepository;
@@ -28,58 +28,59 @@ public class AuthController {
     private JwtService jwtService;
 
     @PostMapping("/register")
-    public User register(@RequestBody User user) {
+    public ResponseEntity<?> register(@RequestBody User user) {
         try {
-            // 🔐 Encrypt the password before saving
             user.setPassword(passwordEncoder.encode(user.getPassword()));
-            return userRepository.save(user);
+            return ResponseEntity.ok(userRepository.save(user));
         } catch (Exception e) {
-            System.out.println(" ERROR IN REGISTRATION:");
             e.printStackTrace();
-            return null;
+            return ResponseEntity.badRequest().body("❌ Registration failed");
         }
     }
-//handling the login requests for new users basically
+
     @PostMapping("/login")
-public String login(@RequestBody LoginRequest request) {
-    try {
-        Optional<User> userOpt = userRepository.findByEmail(request.getEmail());
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        try {
+            Optional<User> userOpt = userRepository.findByEmail(request.getEmail());
 
-        if (userOpt.isEmpty()) {
-            return "User not found";
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.status(404).body("User not found");
+            }
+
+            User user = userOpt.get();
+
+            if (passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+                String token = jwtService.generateToken(user.getEmail());
+                return ResponseEntity.ok(token);
+            } else {
+                return ResponseEntity.status(401).body("Invalid password");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Login failed");
         }
-
-        User user = userOpt.get();
-//checks if the password matches the one registered and generates the jwt token
-        if (passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            //Generate JWT token
-            return jwtService.generateToken(user.getEmail()); // only return token!
-        } else {
-            return "Invalid password";
-        }
-
-    } catch (Exception e) {
-        System.out.println(" ERROR IN LOGIN:");
-        e.printStackTrace();
-        return "Login failed";
     }
-}
 
-    //  Protected endpoint using JWT
-    //use checks and crosses for clearer parts of code and better UI for user
     @GetMapping("/protected")
-    public String protectedEndpoint(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<Map<String, String>> protectedEndpoint(@RequestHeader("Authorization") String authHeader) {
+        Map<String, String> response = new HashMap<>();
+
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return "❌ Missing or invalid Authorization header";
+            response.put("message", "Missing or invalid Authorization header");
+            return ResponseEntity.status(401).body(response);
         }
 
         String token = authHeader.substring(7); // remove "Bearer "
 
         try {
             String email = jwtService.extractEmail(token);
-            return "✅ Access granted for: " + email;
+            response.put("message", "You are authenticated");
+            response.put("email", email);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return "❌ Invalid or expired token";
+            response.put("message", "Invalid or expired token");
+            return ResponseEntity.status(401).body(response);
         }
     }
 }
