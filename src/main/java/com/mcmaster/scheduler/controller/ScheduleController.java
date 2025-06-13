@@ -22,23 +22,32 @@ public class ScheduleController {
 
     // ✅ Add a schedule item
     @PostMapping("/add")
-    public ResponseEntity<?> addItem(@RequestHeader("Authorization") String authHeader, @RequestBody ScheduleItem item) {
-        try {
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Authorization header");
-            }
+public ResponseEntity<?> addItem(@RequestHeader("Authorization") String authHeader, @RequestBody ScheduleItem item) {
+    try {
+        System.out.println("📨 Incoming auth header: " + authHeader);
+        System.out.println("📦 Incoming item: " + item);  // Add toString to ScheduleItem if needed
 
-            String token = authHeader.substring(7);
-            String email = jwtService.extractEmail(token);
-            item.setOwnerEmail(email);
-
-            ScheduleItem saved = scheduleRepo.save(item);
-            return ResponseEntity.ok(saved);
-        } catch (Exception e) {
-            e.printStackTrace(); // 🔥 Log the exact error
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error adding item.");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Authorization header");
         }
+
+        String token = authHeader.substring(7);
+        System.out.println("🔑 Token extracted: " + token);
+
+        String email = jwtService.extractEmail(token);
+        System.out.println("📧 Extracted email: " + email);
+
+        item.setOwnerEmail(email);
+        ScheduleItem saved = scheduleRepo.save(item);
+        System.out.println("✅ Saved item: " + saved);
+
+        return ResponseEntity.ok(saved);
+    } catch (Exception e) {
+        e.printStackTrace(); // 🔥 Print stack trace to logs
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error adding item.");
     }
+}
+
 
     // ✅ Get all schedule items
     @GetMapping
